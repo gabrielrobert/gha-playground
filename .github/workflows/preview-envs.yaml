@@ -1,0 +1,23 @@
+name: PR Comments
+
+on:
+  pull_request:
+    types: [opened, closed
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check event type
+      run: echo "${{ github.event.action }}"
+
+    - name: Comment on PR opened
+      if: github.event.action == 'opened'
+      run: |
+        echo "Hi"
+
+    - name: Comment on PR closed
+      if: github.event.action == 'closed'
+      run: |
+        echo "Goodbye"
