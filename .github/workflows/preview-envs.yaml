@@ -5,33 +5,17 @@ on:
     types: [opened, closed, reopened]
 
 jobs:
-  create-or-remove:
+  create-or-delete:
+    if: ${{ endsWith(github.ref, '-preview-env') }}
     runs-on: ubuntu-latest
     env:
-      PR_NUMBER: ${{ github.event.number }}
+      PREVIEW_ENV_ID: ${{ github.event.number }}
 
     steps:
-      - name: Check event type
-        run: echo "${{ github.event.action }}"
-
-      - name: Check GITHUB_REF type
-        run: echo "${{ github.ref }}"
-
-      - name: Check PR number
-        run: echo "$PR_NUMBER"
-
-      - name: Set preview environment env
-        if: ${{ endsWith(github.ref, '-preview-env') }}
-        run: echo "PREVIEW_ENV_ID=$(echo $GITHUB_REF_NAME | awk -F'/' '{print $2}' | awk -F'-' '{print $1}')" >> $GITHUB_ENV
-
       - name: Create preview environment (PR opened)
         if: github.event.action == 'opened' || github.event.action == 'reopened'
-        run: |
-          echo "Hi"
-          echo "$PR_NUMBER"
+        run: dotnet run --project ./platform/tools/PreviewEnvCli -- create -i $PREVIEW_ENV_ID
 
       - name: Delete preview environment (PR closed)
         if: github.event.action == 'closed'
-        run: |
-          echo "Goodbye"
-          echo "$PR_NUMBER"
+        run: dotnet run --project ./platform/tools/PreviewEnvCli -- delete -i $PREVIEW_ENV_ID
