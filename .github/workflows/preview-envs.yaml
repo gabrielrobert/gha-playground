@@ -2,7 +2,7 @@ name: Preview Environments Workflow
 
 on:
   pull_request:
-    types: [opened, closed]
+    types: [opened, closed, reopened]
 
 jobs:
   comment:
@@ -12,12 +12,15 @@ jobs:
       - name: Check event type
         run: echo "${{ github.event.action }}"
 
+      - name: Check GITHUB_REF type
+        run: echo "${{ github.ref }}"
+
       - name: Set preview environment env
         if: ${{ endsWith(github.ref, '-preview-env') }}
         run: echo "PREVIEW_ENV_ID=$(echo $GITHUB_REF_NAME | awk -F'/' '{print $2}' | awk -F'-' '{print $1}')" >> $GITHUB_ENV
 
       - name: Create preview environment (PR opened)
-        if: github.event.action == 'opened'
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
         run: |
           echo "Hi"
 
