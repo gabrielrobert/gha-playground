@@ -5,8 +5,10 @@ on:
     types: [opened, closed, reopened]
 
 jobs:
-  comment:
+  create-or-remove:
     runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.number }}
 
     steps:
       - name: Check event type
@@ -14,6 +16,9 @@ jobs:
 
       - name: Check GITHUB_REF type
         run: echo "${{ github.ref }}"
+
+      - name: Check PR number
+        run: echo "$PR_NUMBER"
 
       - name: Set preview environment env
         if: ${{ endsWith(github.ref, '-preview-env') }}
@@ -23,8 +28,10 @@ jobs:
         if: github.event.action == 'opened' || github.event.action == 'reopened'
         run: |
           echo "Hi"
+          echo "$PR_NUMBER"
 
       - name: Delete preview environment (PR closed)
         if: github.event.action == 'closed'
         run: |
           echo "Goodbye"
+          echo "$PR_NUMBER"
