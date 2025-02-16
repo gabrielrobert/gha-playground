@@ -25,13 +25,11 @@ jobs:
           fetch-depth: 0
       - name: Get Pull Request Number
         id: pr
-        run: |
-          PR_NUMBER=$(gh pr view --json number -q .number || echo "")
-          echo "pull_request_number=${PR_NUMBER}" >> $GITHUB_ENV
+        run: echo "PREVIEW_ENV_ID=$(gh pr view --json number -q .number || echo "")" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Echo PR number
-        run: echo "PR number is $pull_request_number"
+        run: echo "PR number is $PREVIEW_ENV_ID"
   create-or-delete:
     if: ${{ endsWith(github.head_ref, '-preview-env') }}
     runs-on: ubuntu-latest
