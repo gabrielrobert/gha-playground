@@ -3,6 +3,9 @@ name: Preview Environments Workflow
 on:
   pull_request:
     types: [opened, closed, reopened]
+  push:
+    branches:
+      - **
 
 jobs:
   printJob:
@@ -14,6 +17,17 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
           echo "$GITHUB_CONTEXT"
+  pullRequestNumber:
+    name: Extract PR number
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Pull Request Number
+        id: pr
+        run: echo "::set-output name=pull_request_number::$(gh pr view --json number -q .number || echo "")"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Echo PR number
+        run: echo "PR number is ${{ steps.pr.outputs.pull_request_number }}"
   create-or-delete:
     if: ${{ endsWith(github.head_ref, '-preview-env') }}
     runs-on: ubuntu-latest
