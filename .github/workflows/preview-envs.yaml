@@ -1,23 +1,46 @@
-name: PR Comments
+name: Preview Environments Workflow
 
 on:
   pull_request:
-    types: [opened, closed]
+    types: [opened, closed, reopened]
+  push:
 
 jobs:
-  comment:
+  printJob:
+    name: Print event
     runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+  pullRequestNumber:
+    name: Extract PR number
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get Pull Request Number
+        id: pr
+        run: echo "PREVIEW_ENV_ID=$(gh pr view --json number -q .number || echo "")" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Echo PR number
+        run: echo "PR number is $PREVIEW_ENV_ID"
+  create-or-delete:
+    if: ${{ endsWith(github.head_ref, '-preview-env') }}
+    runs-on: ubuntu-latest
+    env:
+      PREVIEW_ENV_ID: ${{ github.event.number }}
 
     steps:
-      - name: Check event type
-        run: echo "${{ github.event.action }}"
+      - name: Create preview environment (PR opened)
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        run: dotnet run --project ./platform/tools/PreviewEnvCli -- create -i $PREVIEW_ENV_ID
 
-      - name: Comment on PR opened
-        if: github.event.action == 'opened'
-        run: |
-          echo "Hi"
-
-      - name: Comment on PR closed
+      - name: Delete preview environment (PR closed)
         if: github.event.action == 'closed'
-        run: |
-          echo "Goodbye"
+        run: dotnet run --project ./platform/tools/PreviewEnvCli -- delete -i $PREVIEW_ENV_ID
